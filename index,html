@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #word {
+            font-size: 35px;
+            letter-spacing: 12px;
+            margin: 25px 0;
+            font-weight: bold;
+            color: #444;
+        }
+
+        #hangman {
+            font-family: monospace;
+            white-space: pre;
+            font-size: 20px;
+            line-height: 1.2;
+            margin: 20px auto;
+            color: #222;
+        }
+
+        #wrong {
+            color: #e74c3c;
+            margin: 15px;
+        }
+
+        #message {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 20px;
+            color: #2ecc71;
+        }
+
+        .letters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .letter {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .letter:hover {
+            background: #4c63d2;
+        }
+
+        .letter:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #restart {
+            margin-top: 20px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: #2ecc71;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #restart:hover {
+            background: #27ae60;
+        }
+
+       
+        @keyframes celebrateConfetti {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(300px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes winPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes rainbow {
+            0% { color: #ff0000; }
+            16% { color: #ff7f00; }
+            33% { color: #ffff00; }
+            50% { color: #00ff00; }
+            66% { color: #0000ff; }
+            83% { color: #4b0082; }
+            100% { color: #ff0000; }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            pointer-events: none;
+            animation: celebrateConfetti 2s ease-in forwards;
+        }
+
+        #message.victory {
+            animation: winPulse 0.6s ease-in-out 3, rainbow 2s ease-in-out infinite;
+            font-size: 32px;
+        }
+
+        .warning {
+            background: #f39c12;
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            margin: 15px 0;
+            animation: pulse 0.5s ease-in-out 2;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="game">
+
+        <h1>🎯 Hangman Game</h1>
+
+        <div id="hangman"></div>
+
+        <div id="word"></div>
+
+        <p id="wrong">Wrong guesses: 0 / 6</p>
+
+        <div id="message"></div>
+
+        <div class="letters" id="letters"></div>
+
+        <button id="restart" onclick="startGame()">
+            🔄 New Game
+        </button>
+
+    </div>
+
+    <script>
+
+        
+        
+        
+        function playKeyPressSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        
+        function playVictorySound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+            
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const startTime = audioContext.currentTime + (index * 0.15);
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.4);
+            });
+        }
+
+      
+      
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 20 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.borderRadius = '50%';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+       
+
+        
+        const words = [
+            "JAVASCRIPT",
+            "COMPUTER",
+            "PROGRAMMING",
+            "KEYBOARD",
+            "INTERNET",
+            "WEBSITE",
+            "HANGMAN",
+            "DEVELOPER",
+        ];
+
+        
+        const hangmanStages = [
+` 
+  _______
+  |     |
+  |
+  |
+  |
+__|__
+`,
+
+`
+  _______
+  |     |
+  |     O
+  |
+  |
+  |
+__|__
+`,
+
+`
+  _______
+  |     |
+  |     O
+  |     |
+  |
+  |
+__|__
+`,
+
+`
+  _______
+  |     |
+  |     O
+  |    /|
+  |
+  |
+__|__
+`,
+
+`
+  _______
+  |     |
+  |     O
+  |    /|\\
+  |
+  |
+__|__
+`,
+
+`
+  _______
+  |     |
+  |     O
+  |    /|\\
+  |    /
+  |
+__|__
+`,
+
+`
+  _______
+  |     |
+  |     O
+  |    /|\\
+  |    / \\
+  |
+__|__
+`
+        ];
+
+        let selectedWord;
+        let guessedLetters;
+        let wrongGuesses;
+        const maxWrong = 6;
+
+       
+        function startGame() {
+
+            selectedWord =
+                words[Math.floor(Math.random() * words.length)];
+
+            guessedLetters = [];
+            wrongGuesses = 0;
+
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").classList.remove("victory");
+
+            createLetters();
+            updateGame();
+        }
+
+       
+        function createLetters() {
+
+            const lettersContainer =
+                document.getElementById("letters");
+
+            lettersContainer.innerHTML = "";
+
+            for (let i = 65; i <= 90; i++) {
+
+                const letter = String.fromCharCode(i);
+
+                const button = document.createElement("button");
+
+                button.textContent = letter;
+                button.className = "letter";
+
+                button.onclick = function () {
+                    guessLetter(letter, button);
+                };
+
+                lettersContainer.appendChild(button);
+            }
+        }
+
+       
+        function guessLetter(letter, button) {
+
+            button.disabled = true;
+
+           
+            playKeyPressSound();
+
+            guessedLetters.push(letter);
+
+            if (!selectedWord.includes(letter)) {
+                wrongGuesses++;
+            }
+
+            updateGame();
+            checkGame();
+        }
+
+        
+        function updateGame() {
+
+            let displayWord = "";
+
+            for (let letter of selectedWord) {
+
+                if (guessedLetters.includes(letter)) {
+                    displayWord += letter + " ";
+                } else {
+                    displayWord += "_ ";
+                }
+            }
+
+            document.getElementById("word").textContent =
+                displayWord;
+
+            document.getElementById("wrong").textContent =
+                `Wrong guesses: ${wrongGuesses} / ${maxWrong}`;
+
+           
+            const wrongContainer = document.getElementById("wrong");
+            if (wrongGuesses === maxWrong - 1) {
+                wrongContainer.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">⚠️ WARNING! Wrong guesses: ${wrongGuesses} / ${maxWrong} - ONLY 1 CHANCE LEFT! ⚠️</span>`;
+            } else {
+                wrongContainer.textContent = `Wrong guesses: ${wrongGuesses} / ${maxWrong}`;
+            }
+
+            document.getElementById("hangman").textContent =
+                hangmanStages[wrongGuesses];
+        }
+
+       
+        function checkGame() {
+
+            const hasWon =
+                [...selectedWord].every(letter =>
+                    guessedLetters.includes(letter)
+                );
+
+            if (hasWon) {
+
+                const messageElement = document.getElementById("message");
+                messageElement.textContent = "🎉 You Win! 🎉";
+                messageElement.classList.add("victory");
+
+               
+                playVictorySound();
+                createConfetti();
+
+                disableAllButtons();
+            }
+
+            else if (wrongGuesses >= maxWrong) {
+
+                document.getElementById("message").textContent =
+                    `💀 Game Over! The word was ${selectedWord}`;
+
+                disableAllButtons();
+            }
+        }
+
+       
+        function disableAllButtons() {
+
+            document.querySelectorAll(".letter").forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+       
+        startGame();
+
+    </script>
+
+</body>
+</html>
