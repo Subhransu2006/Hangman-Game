@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hangman Game</title>
+    <title>Hangman Game with Smart Hints & Suggestions</title>
 
     <style>
         * {
@@ -13,131 +13,327 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+            color: #1f2937;
         }
 
         .game {
-            background: white;
-            width: 90%;
-            max-width: 600px;
-            padding: 30px;
-            border-radius: 20px;
+            background: #ffffff;
+            width: 100%;
+            max-width: 650px;
+            padding: 28px 24px;
+            border-radius: 24px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e1b4b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* --- Hint & Suggestion Section --- */
+        .hint-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .hint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .category-badge {
+            background: #e0e7ff;
+            color: #3730a3;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .length-badge {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .clue-box {
+            background: #ffffff;
+            border-left: 4px solid #6366f1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .clue-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6366f1;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+
+        .clue-text {
+            font-size: 15px;
+            color: #334155;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        /* Dynamic Suggestion Box */
+        .suggestion-box {
+            background: #eff6ff;
+            border: 1px dashed #93c5fd;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #1d4ed8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .suggestion-box.warning {
+            background: #fffbeb;
+            border-color: #fcd34d;
+            color: #b45309;
+        }
+
+        .extra-hint-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .extra-hint-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .extra-hint-btn:hover:not(:disabled) {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .extra-hint-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .extra-hint-detail {
+            font-size: 12px;
+            color: #047857;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: none;
+        }
+
+        /* --- Hangman & Word Display --- */
+        #hangman {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre;
+            font-size: 18px;
+            line-height: 1.15;
+            margin: 10px auto;
+            color: #1e293b;
+            background: #f8fafc;
+            width: fit-content;
+            padding: 10px 24px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
         }
 
         #word {
-            font-size: 35px;
-            letter-spacing: 12px;
-            margin: 25px 0;
-            font-weight: bold;
-            color: #444;
-        }
-
-        #hangman {
+            font-size: 32px;
+            letter-spacing: 8px;
+            margin: 18px 0 10px;
+            font-weight: 800;
+            color: #0f172a;
             font-family: monospace;
-            white-space: pre;
-            font-size: 20px;
-            line-height: 1.2;
-            margin: 20px auto;
-            color: #222;
+            word-break: break-word;
         }
 
         #wrong {
-            color: #e74c3c;
-            margin: 15px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 8px 0;
+            transition: color 0.3s;
         }
 
         #message {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            margin: 20px;
-            color: #2ecc71;
+            min-height: 30px;
+            margin: 10px 0;
+            color: #059669;
         }
 
+        /* --- Keyboard Letter Buttons --- */
         .letters {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
+            gap: 6px;
+            margin: 16px 0;
+            max-width: 540px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .letter {
-            width: 40px;
+            width: 38px;
             height: 40px;
             border: none;
             border-radius: 8px;
-            background: #667eea;
+            background: #6366f1;
             color: white;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
+            transition: transform 0.1s, background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+            user-select: none;
         }
 
-        .letter:hover {
-            background: #4c63d2;
+        .letter:hover:not(:disabled) {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .letter:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         .letter:disabled {
-            background: #ccc;
+            background: #e2e8f0;
+            color: #94a3b8;
+            box-shadow: none;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .letter.correct {
+            background: #10b981 !important;
+            color: white !important;
+        }
+
+        .letter.incorrect {
+            background: #ef4444 !important;
+            color: white !important;
+        }
+
+        /* --- Footer Controls --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
         }
 
         #restart {
-            margin-top: 20px;
-            padding: 12px 25px;
+            padding: 12px 28px;
             border: none;
-            border-radius: 8px;
-            background: #2ecc71;
+            border-radius: 10px;
+            background: #10b981;
             color: white;
-            font-size: 16px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         #restart:hover {
-            background: #27ae60;
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
         }
 
-       
+        .keyboard-hint-text {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @keyframes celebrateConfetti {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(300px) rotate(720deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(350px) rotate(720deg); opacity: 0; }
         }
 
         @keyframes winPulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
         }
 
         @keyframes rainbow {
-            0% { color: #ff0000; }
-            16% { color: #ff7f00; }
-            33% { color: #ffff00; }
-            50% { color: #00ff00; }
-            66% { color: #0000ff; }
-            83% { color: #4b0082; }
-            100% { color: #ff0000; }
+            0% { color: #ef4444; }
+            20% { color: #f59e0b; }
+            40% { color: #10b981; }
+            60% { color: #3b82f6; }
+            80% { color: #8b5cf6; }
+            100% { color: #ef4444; }
         }
 
         .confetti {
@@ -147,26 +343,17 @@
             background: #ffd700;
             pointer-events: none;
             animation: celebrateConfetti 2s ease-in forwards;
+            z-index: 999;
         }
 
         #message.victory {
             animation: winPulse 0.6s ease-in-out 3, rainbow 2s ease-in-out infinite;
-            font-size: 32px;
+            font-size: 26px;
         }
 
-        .warning {
-            background: #f39c12;
-            padding: 15px;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
-            margin: 15px 0;
-            animation: pulse 0.5s ease-in-out 2;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        #message.defeat {
+            color: #dc2626;
+            font-size: 20px;
         }
     </style>
 </head>
@@ -176,6 +363,34 @@
     <div class="game">
 
         <h1>🎯 Hangman Game</h1>
+
+        <!-- Hint & Clue Banner -->
+        <div class="hint-section">
+            <div class="hint-header">
+                <span class="category-badge" id="categoryBadge">🏷️ Category: Loading...</span>
+                <span class="length-badge" id="lengthBadge">0 Letters</span>
+            </div>
+
+            <!-- Descriptive Clue (Doesn't spoil the word) -->
+            <div class="clue-box">
+                <div class="clue-label">💡 Word Clue</div>
+                <div class="clue-text" id="hintText">Fetching clue...</div>
+            </div>
+
+            <!-- Dynamic suggestion based on game state -->
+            <div class="suggestion-box" id="suggestionBox">
+                <span>💬</span>
+                <span id="suggestionText">Try starting by guessing common vowels (A, E, I, O, U)!</span>
+            </div>
+
+            <!-- Extra Hint Trigger -->
+            <div class="extra-hint-controls">
+                <button class="extra-hint-btn" id="extraHintBtn" onclick="requestExtraSuggestion()">
+                    🔍 Need an Extra Suggestion?
+                </button>
+                <div class="extra-hint-detail" id="extraHintDetail"></div>
+            </div>
+        </div>
 
         <div id="hangman"></div>
 
@@ -187,61 +402,65 @@
 
         <div class="letters" id="letters"></div>
 
-        <button id="restart" onclick="startGame()">
-            🔄 New Game
-        </button>
+        <div class="controls">
+            <button id="restart" onclick="startGame()">
+                🔄 New Game
+            </button>
+        </div>
+
+        <p class="keyboard-hint-text">⌨️ Tip: You can also type letters on your physical keyboard!</p>
 
     </div>
 
     <script>
-
-        
-        
-        
-        function playKeyPressSound() {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            
-            oscillator.connect(gain);
-            gain.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            
-            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
-        }
-
-        
-        function playVictorySound() {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-            
-            notes.forEach((freq, index) => {
+        // Sound synthesis
+        function playKeyPressSound(isCorrect = true) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
                 const gain = audioContext.createGain();
                 
                 oscillator.connect(gain);
                 gain.connect(audioContext.destination);
                 
-                oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
+                oscillator.frequency.value = isCorrect ? 800 : 350;
+                oscillator.type = isCorrect ? 'sine' : 'triangle';
                 
-                const startTime = audioContext.currentTime + (index * 0.15);
-                gain.gain.setValueAtTime(0.3, startTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
                 
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.4);
-            });
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                // Ignore audio context autoplay restriction if any
+            }
         }
 
-      
-      
+        function playVictorySound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+                
+                notes.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    
+                    oscillator.connect(gain);
+                    gain.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = freq;
+                    oscillator.type = 'sine';
+                    
+                    const startTime = audioContext.currentTime + (index * 0.12);
+                    gain.gain.setValueAtTime(0.25, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.35);
+                    
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.35);
+                });
+            } catch (e) {}
+        }
+
         function createConfetti() {
             const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700'];
             
@@ -251,7 +470,7 @@
                 confetti.style.left = Math.random() * 100 + '%';
                 confetti.style.top = '-10px';
                 confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.width = Math.random() * 20 + 5 + 'px';
+                confetti.style.width = Math.random() * 16 + 6 + 'px';
                 confetti.style.height = confetti.style.width;
                 confetti.style.borderRadius = '50%';
                 document.body.appendChild(confetti);
@@ -260,21 +479,112 @@
             }
         }
 
-       
-
-        
-        const words = [
-            "JAVASCRIPT",
-            "COMPUTER",
-            "PROGRAMMING",
-            "KEYBOARD",
-            "INTERNET",
-            "WEBSITE",
-            "HANGMAN",
-            "DEVELOPER",
+        // --- Rich Word Database with Descriptive Clues (not giving away the answer) ---
+        const wordList = [
+            {
+                word: "JAVASCRIPT",
+                category: "Programming",
+                hint: "A versatile scripting language that brings interactivity and dynamic behavior to websites.",
+                clue: "It runs in your browser alongside HTML and CSS."
+            },
+            {
+                word: "COMPUTER",
+                category: "Technology",
+                hint: "An electronic machine capable of accepting data, processing calculations, and executing programs.",
+                clue: "Consists of hardware components like CPU, RAM, and motherboard."
+            },
+            {
+                word: "PROGRAMMING",
+                category: "Coding & Software",
+                hint: "The creative craft of designing and writing instructions that tell a machine what to do.",
+                clue: "Involves writing algorithms and code in languages like Python or C++."
+            },
+            {
+                word: "KEYBOARD",
+                category: "Hardware Peripheral",
+                hint: "An input device composed of alphanumeric keys, function keys, and symbols.",
+                clue: "Often uses the familiar QWERTY arrangement."
+            },
+            {
+                word: "INTERNET",
+                category: "Global Networking",
+                hint: "A worldwide telecommunications network that links millions of computers and devices.",
+                clue: "Operates using protocols like IP and TCP."
+            },
+            {
+                word: "WEBSITE",
+                category: "Web & Internet",
+                hint: "A collection of publicly accessible, interlinked web pages grouped under a domain name.",
+                clue: "You view it through a web browser using a URL."
+            },
+            {
+                word: "DEVELOPER",
+                category: "Tech Careers",
+                hint: "A professional programmer who designs, builds, and maintains software applications.",
+                clue: "Someone who transforms ideas and algorithms into working code."
+            },
+            {
+                word: "DATABASE",
+                category: "Data Systems",
+                hint: "A structured, organized collection of information typically stored and accessed electronically.",
+                clue: "Frequently queried with languages like SQL."
+            },
+            {
+                word: "ALGORITHM",
+                category: "Computer Science",
+                hint: "A step-by-step set of mathematical rules or logical instructions for solving a problem.",
+                clue: "Powers search engines, sorting routines, and navigation apps."
+            },
+            {
+                word: "BROWSER",
+                category: "Software Applications",
+                hint: "An application used to access, navigate, and render pages on the World Wide Web.",
+                clue: "Examples include Chrome, Firefox, Safari, and Edge."
+            },
+            {
+                word: "ASTRONOMY",
+                category: "Natural Science",
+                hint: "The scientific study of celestial bodies such as stars, planets, comets, and galaxies.",
+                clue: "Employs powerful optical and radio telescopes to explore space."
+            },
+            {
+                word: "MICROSCOPE",
+                category: "Scientific Instruments",
+                hint: "A precision optical laboratory tool used to magnify tiny organisms invisible to the naked eye.",
+                clue: "Essential in biology laboratories to observe bacteria and cells."
+            },
+            {
+                word: "PYRAMID",
+                category: "Ancient History",
+                hint: "A monumental ancient stone structure with triangular sloping sides meeting at an apex.",
+                clue: "Iconic historical wonders located in places like Giza."
+            },
+            {
+                word: "SYMPHONY",
+                category: "Music & Art",
+                hint: "An elaborate, multi-movement orchestral composition written for numerous instruments.",
+                clue: "Composed by classical masters like Beethoven and Mozart."
+            },
+            {
+                word: "HANGMAN",
+                category: "Word Games",
+                hint: "A classic guessing game where players discover a hidden word letter by letter before turns run out.",
+                clue: "The very game you are playing right now!"
+            },
+            {
+                word: "SATELLITE",
+                category: "Space Technology",
+                hint: "An artificial object placed into planetary orbit to transmit data or monitor weather.",
+                clue: "Orbits high above Earth and enables GPS mapping."
+            },
+            {
+                word: "SMARTPHONE",
+                category: "Consumer Tech",
+                hint: "A pocket-sized cellular telephone equipped with a touchscreen, apps, and web capabilities.",
+                clue: "Runs modern mobile operating systems like Android or iOS."
+            }
         ];
 
-        
         const hangmanStages = [
 ` 
   _______
@@ -284,7 +594,6 @@
   |
 __|__
 `,
-
 `
   _______
   |     |
@@ -294,7 +603,6 @@ __|__
   |
 __|__
 `,
-
 `
   _______
   |     |
@@ -304,7 +612,6 @@ __|__
   |
 __|__
 `,
-
 `
   _______
   |     |
@@ -314,7 +621,6 @@ __|__
   |
 __|__
 `,
-
 `
   _______
   |     |
@@ -324,7 +630,6 @@ __|__
   |
 __|__
 `,
-
 `
   _______
   |     |
@@ -334,7 +639,6 @@ __|__
   |
 __|__
 `,
-
 `
   _______
   |     |
@@ -346,43 +650,55 @@ __|__
 `
         ];
 
+        let currentWordObj;
         let selectedWord;
         let guessedLetters;
         let wrongGuesses;
+        let extraHintsRevealed;
         const maxWrong = 6;
+        const vowels = ['A', 'E', 'I', 'O', 'U'];
 
-       
         function startGame() {
-
-            selectedWord =
-                words[Math.floor(Math.random() * words.length)];
+            // Pick random word item
+            currentWordObj = wordList[Math.floor(Math.random() * wordList.length)];
+            selectedWord = currentWordObj.word.toUpperCase();
 
             guessedLetters = [];
             wrongGuesses = 0;
+            extraHintsRevealed = 0;
 
-            document.getElementById("message").textContent = "";
-            document.getElementById("message").classList.remove("victory");
+            // Reset UI elements
+            document.getElementById("categoryBadge").textContent = `🏷️ Category: ${currentWordObj.category}`;
+            document.getElementById("lengthBadge").textContent = `📏 ${selectedWord.length} Letters`;
+            document.getElementById("hintText").textContent = currentWordObj.hint;
+
+            const extraBtn = document.getElementById("extraHintBtn");
+            extraBtn.disabled = false;
+            extraBtn.textContent = "🔍 Need an Extra Suggestion?";
+            
+            const extraDetail = document.getElementById("extraHintDetail");
+            extraDetail.style.display = "none";
+            extraDetail.textContent = "";
+
+            const msgEl = document.getElementById("message");
+            msgEl.textContent = "";
+            msgEl.className = "";
 
             createLetters();
             updateGame();
+            updateDynamicSuggestion();
         }
 
-       
         function createLetters() {
-
-            const lettersContainer =
-                document.getElementById("letters");
-
+            const lettersContainer = document.getElementById("letters");
             lettersContainer.innerHTML = "";
 
             for (let i = 65; i <= 90; i++) {
-
                 const letter = String.fromCharCode(i);
-
                 const button = document.createElement("button");
-
                 button.textContent = letter;
                 button.className = "letter";
+                button.id = `btn-${letter}`;
 
                 button.onclick = function () {
                     guessLetter(letter, button);
@@ -392,97 +708,168 @@ __|__
             }
         }
 
-       
         function guessLetter(letter, button) {
+            if (button.disabled || wrongGuesses >= maxWrong) return;
 
             button.disabled = true;
-
-           
-            playKeyPressSound();
-
             guessedLetters.push(letter);
 
-            if (!selectedWord.includes(letter)) {
+            const isCorrect = selectedWord.includes(letter);
+            playKeyPressSound(isCorrect);
+
+            if (isCorrect) {
+                button.classList.add("correct");
+            } else {
+                button.classList.add("incorrect");
                 wrongGuesses++;
             }
 
             updateGame();
+            updateDynamicSuggestion();
             checkGame();
         }
 
-        
         function updateGame() {
-
             let displayWord = "";
+            let remainingLetters = 0;
 
             for (let letter of selectedWord) {
-
                 if (guessedLetters.includes(letter)) {
                     displayWord += letter + " ";
                 } else {
                     displayWord += "_ ";
+                    remainingLetters++;
                 }
             }
 
-            document.getElementById("word").textContent =
-                displayWord;
+            document.getElementById("word").textContent = displayWord.trim();
 
-            document.getElementById("wrong").textContent =
-                `Wrong guesses: ${wrongGuesses} / ${maxWrong}`;
-
-           
             const wrongContainer = document.getElementById("wrong");
             if (wrongGuesses === maxWrong - 1) {
-                wrongContainer.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">⚠️ WARNING! Wrong guesses: ${wrongGuesses} / ${maxWrong} - ONLY 1 CHANCE LEFT! ⚠️</span>`;
+                wrongContainer.innerHTML = `<span style="color: #dc2626; font-weight: bold;">⚠️ CAUTION! Wrong guesses: ${wrongGuesses} / ${maxWrong} - ONLY 1 ATTEMPT LEFT!</span>`;
             } else {
                 wrongContainer.textContent = `Wrong guesses: ${wrongGuesses} / ${maxWrong}`;
             }
 
-            document.getElementById("hangman").textContent =
-                hangmanStages[wrongGuesses];
+            document.getElementById("hangman").textContent = hangmanStages[wrongGuesses];
         }
 
-       
-        function checkGame() {
+        // --- Dynamic Suggestions while guessing ("filling the word") without giving away the answer ---
+        function updateDynamicSuggestion() {
+            const suggestionBox = document.getElementById("suggestionBox");
+            const suggestionText = document.getElementById("suggestionText");
 
-            const hasWon =
-                [...selectedWord].every(letter =>
-                    guessedLetters.includes(letter)
-                );
+            // Count discovered and remaining
+            const uniqueLetters = [...new Set(selectedWord.split(''))];
+            const discoveredUnique = uniqueLetters.filter(l => guessedLetters.includes(l));
+            const remainingCount = uniqueLetters.length - discoveredUnique.length;
+
+            const vowelMatches = uniqueLetters.filter(l => vowels.includes(l));
+            const unguessedVowels = vowelMatches.filter(v => !guessedLetters.includes(v));
+
+            if (remainingCount === 0) {
+                suggestionText.textContent = "🎉 Excellent intuition! You completed the entire word!";
+                suggestionBox.className = "suggestion-box";
+                return;
+            }
+
+            if (wrongGuesses >= maxWrong - 1) {
+                suggestionBox.className = "suggestion-box warning";
+                suggestionText.textContent = `⚠️ Final chance! The word has ${remainingCount} unique letter(s) remaining. Think carefully about '${currentWordObj.category}'!`;
+            } else if (guessedLetters.length === 0) {
+                suggestionBox.className = "suggestion-box";
+                suggestionText.textContent = `💡 Suggestion: Start by trying vowels (A, E, I, O, U) or common letters to unveil the structure!`;
+            } else if (unguessedVowels.length > 0 && wrongGuesses >= 2) {
+                suggestionBox.className = "suggestion-box";
+                suggestionText.textContent = `💡 Hint: There are still vowel(s) left in this word. Have you checked all standard vowels?`;
+            } else if (wrongGuesses > 0) {
+                suggestionBox.className = "suggestion-box";
+                suggestionText.textContent = `💡 Tip: Think about terms in "${currentWordObj.category}". You have ${remainingCount} unique letter(s) left to uncover!`;
+            } else {
+                suggestionBox.className = "suggestion-box";
+                suggestionText.textContent = `✨ Off to a great start! You've uncovered ${discoveredUnique.length} of ${uniqueLetters.length} unique letters!`;
+            }
+        }
+
+        // --- Smart Progressive Extra Suggestions ---
+        function requestExtraSuggestion() {
+            const extraBtn = document.getElementById("extraHintBtn");
+            const extraDetail = document.getElementById("extraHintDetail");
+
+            extraHintsRevealed++;
+            extraDetail.style.display = "inline-block";
+
+            const unrevealedLetters = [...new Set(selectedWord.split(''))].filter(l => !guessedLetters.includes(l));
+            const wordVowels = [...new Set(selectedWord.split('').filter(l => vowels.includes(l)))];
+
+            if (extraHintsRevealed === 1) {
+                // Hint 1: Secondary context clue or vowel count
+                extraDetail.textContent = `💡 Additional Clue: ${currentWordObj.clue} (Contains ${wordVowels.length} distinct vowel sound${wordVowels.length > 1 ? 's' : ''})`;
+                extraBtn.textContent = "🔍 Need Another Suggestion?";
+            } else if (extraHintsRevealed === 2) {
+                // Hint 2: Gives a multiple-choice letter clue without giving exact answer
+                if (unrevealedLetters.length > 0) {
+                    const oneCorrect = unrevealedLetters[Math.floor(Math.random() * unrevealedLetters.length)];
+                    // Pick two distractors not in word
+                    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+                    const distractors = alphabet.filter(l => !selectedWord.includes(l) && !guessedLetters.includes(l));
+                    const randomDistractor1 = distractors[Math.floor(Math.random() * distractors.length)] || 'Z';
+                    const randomDistractor2 = distractors[(Math.floor(Math.random() * distractors.length) + 1) % distractors.length] || 'Q';
+                    
+                    const group = [oneCorrect, randomDistractor1, randomDistractor2].sort(() => Math.random() - 0.5);
+                    extraDetail.textContent = `💡 Letter Suggestion: At least one of these 3 letters is in the word: [ ${group.join(", ")} ]`;
+                } else {
+                    extraDetail.textContent = `💡 Hint: You already found almost every letter!`;
+                }
+                extraBtn.disabled = true;
+                extraBtn.textContent = "✅ Max Suggestions Used";
+            }
+        }
+
+        function checkGame() {
+            const hasWon = [...selectedWord].every(letter => guessedLetters.includes(letter));
 
             if (hasWon) {
-
                 const messageElement = document.getElementById("message");
-                messageElement.textContent = "🎉 You Win! 🎉";
-                messageElement.classList.add("victory");
+                messageElement.textContent = "🎉 Impressive! You solved the word! 🎉";
+                messageElement.className = "victory";
 
-               
                 playVictorySound();
                 createConfetti();
+                disableAllButtons();
+                document.getElementById("extraHintBtn").disabled = true;
+            } else if (wrongGuesses >= maxWrong) {
+                const messageElement = document.getElementById("message");
+                messageElement.textContent = `💀 Game Over! The word was "${selectedWord}".`;
+                messageElement.className = "defeat";
 
                 disableAllButtons();
-            }
-
-            else if (wrongGuesses >= maxWrong) {
-
-                document.getElementById("message").textContent =
-                    `💀 Game Over! The word was ${selectedWord}`;
-
-                disableAllButtons();
+                document.getElementById("extraHintBtn").disabled = true;
             }
         }
 
-       
         function disableAllButtons() {
-
             document.querySelectorAll(".letter").forEach(button => {
                 button.disabled = true;
             });
         }
 
-       
-        startGame();
+        // --- Physical Keyboard Event Listener (Fill word using physical keys) ---
+        window.addEventListener("keydown", function (event) {
+            // Ignore keypresses with Ctrl/Alt/Meta
+            if (event.ctrlKey || event.altKey || event.metaKey) return;
 
+            const key = event.key.toUpperCase();
+            if (key >= "A" && key <= "Z" && key.length === 1) {
+                const btn = document.getElementById(`btn-${key}`);
+                if (btn && !btn.disabled) {
+                    guessLetter(key, btn);
+                }
+            }
+        });
+
+        // Start game on initial load
+        startGame();
     </script>
 
 </body>
